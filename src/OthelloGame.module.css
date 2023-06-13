@@ -1,0 +1,13 @@
+.gameboard {
+  height: 600px;
+  width: 600px;
+  table-layout: fixed;
+  text-align: center;
+  margin: 0 auto;
+  margin-top: min(10%, 80px);
+  border-collapse: collapse;
+}
+
+.border {
+  border: 1px solid white;
+}

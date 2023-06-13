@@ -1,11 +1,8 @@
 import type { Component } from 'solid-js';
+import OthelloGame from './OthelloGame';
 
 const App: Component = () => {
-  return (
-    <div>
-      <h1>Hello World</h1>
-    </div>
-  );
+  return <OthelloGame />;
 };
 
 export default App;
