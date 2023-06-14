@@ -10,7 +10,7 @@ export type Move = {
 const GAMEBOARD_SIZE = 8;
 
 export function initializeGameBoard(): Gameboard {
-  const gameboard: Gameboard = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill(' '));
+  const gameboard = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill(' '));
   gameboard[3][3] = 'o';
   gameboard[3][4] = 'x';
   gameboard[4][3] = 'x';
@@ -23,6 +23,16 @@ function printGameBoard(gameboard: Gameboard): void {
   for (let i = 0; i < GAMEBOARD_SIZE; i++) {
     console.log(i + ' ' + gameboard[i].join('  '));
   }
+}
+
+export function cloneGameboard(gameboard: Gameboard): Gameboard {
+  const gameboardClone = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill(' '));
+  for (let i = 0; i < GAMEBOARD_SIZE; i++) {
+    for (let j = 0; j < GAMEBOARD_SIZE; j++) {
+      gameboardClone[i][j] = gameboard[i][j]
+    }
+  }
+  return gameboardClone
 }
 
 function changePlayer(player: string): string {
@@ -46,17 +56,18 @@ function getAdversary(player: string): string {
   return (player == 'x') ? 'o' : 'x';
 }
 
-function getLegalMoves(player: string, gameboard: Gameboard, legalMoves: Move[]): void {
+function getLegalMoves(player: string, gameboard: Gameboard): Move[] {
+  const legalMoves: Move[] = [];
   const adversary = getAdversary(player);
   for (let row = 0; row < GAMEBOARD_SIZE; row++) {
     for (let column = 0; column < GAMEBOARD_SIZE; column++) {
-      if (gameboard[row][column] == player) {
+      if (gameboard[row][column] === player) {
         const vectors = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [-1, 1], [1, -1], [1, 0], [1, 1]];
         for (let i = 0; i < vectors.length; i++) {
           let mult = 1;
           let newRow = row + vectors[i][0];
           let newColumn = column + vectors[i][1];
-          if (gameboard[newRow][newColumn] === ' ')
+          if (!isCaseInGameboard(newRow, newColumn) || gameboard[newRow][newColumn] === ' ')
             continue;
           while (isCaseInGameboard(newRow, newColumn) && gameboard[newRow][newColumn] === adversary) {
             mult++;
@@ -73,19 +84,19 @@ function getLegalMoves(player: string, gameboard: Gameboard, legalMoves: Move[])
       }
     }
   }
+  return legalMoves;
 }
 
-function isMoveValid(move: Move, player: string, gameboard: Gameboard): boolean {
-  const legalMoves: Move[] = [];
-  getLegalMoves(player, gameboard, legalMoves);
+function isLegalMove(move: Move, player: string, gameboard: Gameboard): boolean {
+  const legalMoves: Move[] = getLegalMoves(player, gameboard);
   const isMoveLegal = isCaseInArray(move, legalMoves);
   return isMoveLegal;
 }
 
-function isCaseValid(move: Move, player: string, gameboard: Gameboard): boolean {
+export function isMoveValid(move: Move, player: string, gameboard: Gameboard): boolean {
   if (!isCaseInGameboard(move.row, move.column)) return false;
   if (gameboard[move.row][move.column] != ' ') return false;
-  if (!isMoveValid(move, player, gameboard)) return false;
+  if (!isLegalMove(move, player, gameboard)) return false;
   return true;
 }
 
@@ -114,17 +125,20 @@ function convertAdversaryPieces(move: Move, player: string, gameboard: Gameboard
   }
 }
 
-function playMove(move: Move, player: string, gameboard: Gameboard): void {
+export function playMove(move: Move, player: string, gameboard: Gameboard): void {
   gameboard[move.row][move.column] = player;
   convertAdversaryPieces(move, player, gameboard);
 }
 
-function placeLegalMovesOnGameboard(gameboard: Gameboard, legalMoves: Move[]): void {
+export function placeLegalMovesOnGameboard(gameboard: Gameboard, player: string): Gameboard {
+  const legalMoves = getLegalMoves(player, gameboard);
+  const gameboardWithLegalMoves = cloneGameboard(gameboard);
   for (let i = 0; i < legalMoves.length; i++) {
     const row = legalMoves[i].row;
     const column = legalMoves[i].column;
-    gameboard[row][column] = '.';
+    gameboardWithLegalMoves[row][column] = '.';
   }
+  return gameboardWithLegalMoves;
 }
 
 function removeLegalMovesOnGameboard(gameboard: Gameboard): void {
@@ -136,11 +150,9 @@ function removeLegalMovesOnGameboard(gameboard: Gameboard): void {
   }
 }
 
-function isEndGame(gameboard: Gameboard): boolean {
-  const playerXLegalMoves: Move[] = [];
-  const playerOLegalMoves: Move[] = [];
-  getLegalMoves('o', gameboard, playerXLegalMoves);
-  getLegalMoves('x', gameboard, playerOLegalMoves);
+export function checkIfGameEnd(gameboard: Gameboard): boolean {
+  const playerOLegalMoves = getLegalMoves('o', gameboard);
+  const playerXLegalMoves = getLegalMoves('x', gameboard);
   const legalMovesCounterPlayerX = playerXLegalMoves.length;
   const legalMovesCounterPlayerO = playerOLegalMoves.length;
   const endGame = !legalMovesCounterPlayerX && !legalMovesCounterPlayerO;
@@ -177,43 +189,4 @@ function printWinner(gameboard: Gameboard): void {
   console.log('\n');
   console.log('X score : ' + playerXPiecesCounter);
   console.log('O score : ' + playerOPiecesCounter);
-}
-
-function getMoveInput(player: string, gameboard: Gameboard): Move {
-  let isValid = false;
-  const move: Move = { row: 0, column: 0 };
-  while (!isValid) {
-    const moveInput = prompt('Enter a case (row,column) : ');
-    if (moveInput === null) {
-      console.log('Invalid case');
-      continue;
-    }
-    const caseInputSplitted = moveInput.split(',');
-    const row = parseInt(caseInputSplitted[0]);
-    const column = parseInt(caseInputSplitted[1]);
-    move.row = row;
-    move.column = column;
-    isValid = isCaseValid(move, player, gameboard);
-    if (!isValid)
-      console.log('Invalid case');
-  }
-  return move;
-}
-
-function launchGame(): void {
-  const gameboard = initializeGameBoard();
-  let player = 'o';
-  while (!isEndGame(gameboard)) {
-    player = changePlayer(player);
-    const legalMoves: Move[] = [];
-    getLegalMoves(player, gameboard, legalMoves);
-    if (!legalMoves.length) continue;
-    placeLegalMovesOnGameboard(gameboard, legalMoves);
-    printGameBoard(gameboard);
-    removeLegalMovesOnGameboard(gameboard);
-    const move = getMoveInput(player, gameboard);
-    playMove(move, player, gameboard);
-  }
-  printGameBoard(gameboard);
-  printWinner(gameboard);
 }
