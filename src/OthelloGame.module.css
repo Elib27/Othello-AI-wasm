@@ -4,7 +4,7 @@
   table-layout: fixed;
   text-align: center;
   margin: 0 auto;
-  margin-top: min(10%, 80px);
+  margin-top: 2rem;
   border-collapse: collapse;
   position: relative;
   font-size: 2rem;
@@ -35,4 +35,9 @@
 
 .border {
   border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.playerRound {
+  margin-top: 2em;
+  text-align: center;
 }

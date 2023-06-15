@@ -7,6 +7,11 @@ export type Move = {
   column: number;
 };
 
+type Score =  {
+  x: number;
+  o: number;
+};
+
 const GAMEBOARD_SIZE = 8;
 
 export function initializeGameBoard(): Gameboard {
@@ -18,13 +23,6 @@ export function initializeGameBoard(): Gameboard {
   return gameboard;
 }
 
-function printGameBoard(gameboard: Gameboard): void {
-  console.log('  0  1  2  3  4  5  6  7');
-  for (let i = 0; i < GAMEBOARD_SIZE; i++) {
-    console.log(i + ' ' + gameboard[i].join('  '));
-  }
-}
-
 export function cloneGameboard(gameboard: Gameboard): Gameboard {
   const gameboardClone = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill(' '));
   for (let i = 0; i < GAMEBOARD_SIZE; i++) {
@@ -33,10 +31,6 @@ export function cloneGameboard(gameboard: Gameboard): Gameboard {
     }
   }
   return gameboardClone
-}
-
-function changePlayer(player: string): string {
-  return (player == 'x') ? 'o' : 'x';
 }
 
 function isCaseInGameboard(row: number, column: number): boolean {
@@ -56,7 +50,7 @@ function getAdversary(player: string): string {
   return (player == 'x') ? 'o' : 'x';
 }
 
-function getLegalMoves(player: string, gameboard: Gameboard): Move[] {
+export function getLegalMoves(player: string, gameboard: Gameboard): Move[] {
   const legalMoves: Move[] = [];
   const adversary = getAdversary(player);
   for (let row = 0; row < GAMEBOARD_SIZE; row++) {
@@ -170,23 +164,15 @@ function countPlayerPieces(player: string, gameboard: Gameboard): number {
   return piecesCount;
 }
 
-function countPieces(gameboard: Gameboard): number {
+export function getScore(gameboard: Gameboard): Score {
   const playerXPiecesCounter = countPlayerPieces('x', gameboard);
   const playerOPiecesCounter = countPlayerPieces('o', gameboard);
-  const totalPiecesCount = playerXPiecesCounter + playerOPiecesCounter;
-  return totalPiecesCount;
+  return { x: playerXPiecesCounter, o: playerOPiecesCounter };
 }
 
-function printWinner(gameboard: Gameboard): void {
-  const playerXPiecesCounter = countPlayerPieces('x', gameboard);
-  const playerOPiecesCounter = countPlayerPieces('o', gameboard);
-  if (playerXPiecesCounter > playerOPiecesCounter)
-    console.log('Winner : X');
-  else if (playerXPiecesCounter < playerOPiecesCounter)
-    console.log('Winner : O');
-  else
-    console.log('Draw');
-  console.log('\n');
-  console.log('X score : ' + playerXPiecesCounter);
-  console.log('O score : ' + playerOPiecesCounter);
+export function getWinner(gameboard: Gameboard): string {
+  const score = getScore(gameboard);
+  if (score.x > score.o) return 'x';
+  if (score.x < score.o) return 'o';
+  return 'draw';
 }
