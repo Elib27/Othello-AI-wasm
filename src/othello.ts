@@ -14,12 +14,21 @@ type Score =  {
 
 const GAMEBOARD_SIZE = 8;
 
+// export function initializeGameBoard(): Gameboard {
+//   const gameboard = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill(' '));
+//   gameboard[3][3] = 'o';
+//   gameboard[3][4] = 'x';
+//   gameboard[4][3] = 'x';
+//   gameboard[4][4] = 'o';
+//   return gameboard;
+// }
+
 export function initializeGameBoard(): Gameboard {
-  const gameboard = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill(' '));
+  const gameboard = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill('x'));
   gameboard[3][3] = 'o';
-  gameboard[3][4] = 'x';
-  gameboard[4][3] = 'x';
-  gameboard[4][4] = 'o';
+  gameboard[3][4] = ' ';
+  gameboard[4][3] = 'o';
+  gameboard[4][4] = 'x';
   return gameboard;
 }
 

@@ -1,7 +1,8 @@
 import type { Component } from 'solid-js';
+import type { Move, Gameboard } from './othello';
 import { createSignal, Index, Show } from 'solid-js';
 import styles from './OthelloGame.module.css';
-import type { Move } from './othello';
+import GameResult from './GameResult';
 import {
   initializeGameBoard,
   cloneGameboard,
@@ -9,20 +10,15 @@ import {
   isMoveValid,
   playMove,
   checkIfGameEnd,
-  getLegalMoves,
-  getScore,
-  getWinner
+  getLegalMoves
 } from './othello'
 
 
 const OthelloGame: Component = () => {
 
-  const [gameboard, setGameboard] = createSignal(initializeGameBoard());
+  const [gameboard, setGameboard] = createSignal<Gameboard>(initializeGameBoard());
   const [player, setPlayer] = createSignal('x');
   const [isGameEnd, setIsGameEnd] = createSignal(false);
-  const [score, setScore] = createSignal({x: 2, o: 2});
-
-  const winner = () => getWinner(gameboard());
 
   const gameboardWithPossibleMoves = () => placeLegalMovesOnGameboard(gameboard(), player());
 
@@ -39,11 +35,10 @@ const OthelloGame: Component = () => {
     changePlayer();
     const legalMovesNextPlayer = getLegalMoves(player(), gameboard());
     if (legalMovesNextPlayer.length === 0) changePlayer();
-    if (gameEnd) setScore(getScore(newGameboard));
   }
 
   return (
-    <Show when={!isGameEnd()} fallback={<div>Game ended, the winner is {winner()} ! X score : {score().x}, O score : {score().o}</div>}>
+    <Show when={!isGameEnd()} fallback={<GameResult gameboard={gameboard()}/>}>
       <div class={styles.playerRound}>It's {player().toUpperCase()} turn !</div>
       <table class={styles.gameboard}>
         <tbody>
