@@ -10,7 +10,9 @@ import {
   isMoveValid,
   playMove,
   checkIfGameEnd,
-  getLegalMoves
+  getLegalMoves,
+  convertGameboardToArray,
+  convertAImoveToMove,
 } from './othello'
 
 
@@ -22,54 +24,57 @@ const OthelloGame: Component = () => {
 
   const gameboardWithPossibleMoves = () => placeLegalMovesOnGameboard(gameboard(), player());
 
-  const changePlayer = () => setPlayer(p => p === 'x' ? 'o' : 'x');
-
   const AIplayer = 'o';
 
-  // onMount(() => {
-  //   WebAssembly.instantiateStreaming(fetch('/othello.wasm'), {}).then(obj => {
+  let getAImoveWrapper: (gameboard: Gameboard, player: string) => Promise<Move>;
 
-  //     const arrayGameboardMemory = new Int8Array(obj.instance.exports.memory.buffer);
-    
-  //     for (let i = 0; i < arrayGameboard.length; i++) {
-  //       arrayGameboardMemory[i] = arrayGameboard[i];
-  //     }
-    
-  //     const { getAImove } = obj.instance.exports;
-    
-  //     const getAI = () => {
-  //       const result = getAImove(arrayGameboardMemory, 'x'.charCodeAt(0));
-  //       console.log(result);
-  //       const move = convertAImoveToMove(result);
-  //       console.log(move);
-  //     };
-  //   });
-  // });
+  onMount(() => {
+    WebAssembly.instantiateStreaming(fetch('/othelloAI.wasm'), {}).then(obj => {
 
-  createEffect(async () => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    if (player() !== AIplayer) return;
-    const legalMoves = getLegalMoves(AIplayer, gameboard());
-    if (legalMoves.length > 0) {
-      const move = legalMoves[Math.floor(Math.random() * legalMoves.length)];
-      setPlayerCase(move);
-    }
-    changePlayer();
+      const { getAImove } = obj.instance.exports;
+
+      getAImoveWrapper = async (gameboard: Gameboard, player: string) => {
+        const arrayGameboard = convertGameboardToArray(gameboard);
+        const arrayGameboardMemory = new Int8Array(obj.instance.exports.memory.buffer);
+        for (let i = 0; i < arrayGameboard.length; i++) {
+          arrayGameboardMemory[i] = arrayGameboard[i];
+        }
+        const result = getAImove(arrayGameboardMemory, player.charCodeAt(0));
+        const move = convertAImoveToMove(result);
+        console.log(move);
+        return move;
+      }
+    });
   });
+
+  function updateGameboardWithMove(move: Move, player: string) {
+    const newGameboard = cloneGameboard(gameboard());
+    playMove(move, player, newGameboard);
+    setGameboard(newGameboard);
+  }
+
+  async function playAIMove() {
+    const legalMoves = getLegalMoves(AIplayer, gameboard());
+    if (legalMoves.length === 0) return;
+    const move = await getAImoveWrapper(gameboard(), AIplayer)
+    updateGameboardWithMove(move, player());
+  }
+
+  async function setPlayerCase(move: Move) {
+    if (player() === AIplayer) return;
+    if (isMoveValid(move, player(), gameboard())) {
+      updateGameboardWithMove(move, player());
+      setPlayer('o')
+    }
+    await playAIMove();
+    setPlayer('x');
+  }
 
   createEffect(() => {
     const gameEndStatus = checkIfGameEnd(gameboard());
     setIsGameEnd(gameEndStatus);
-  })
+  });
 
-  function setPlayerCase(move: Move) {
-    if (player() === AIplayer) return;
-    if (!isMoveValid(move, player(), gameboard())) return;
-    const newGameboard = cloneGameboard(gameboard());
-    playMove(move, player(), newGameboard);
-    setGameboard(newGameboard);
-    changePlayer();
-  }
 
   return (
     <Show when={!isGameEnd()} fallback={<GameResult gameboard={gameboard()}/>}>
