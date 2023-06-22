@@ -1,6 +1,7 @@
 /*** Othello game logic ***/
 
 export type Gameboard = string[][];
+export type GameboardArray = string[];
 
 export type Move = {
   row: number;
@@ -14,23 +15,23 @@ type Score =  {
 
 const GAMEBOARD_SIZE = 8;
 
-// export function initializeGameBoard(): Gameboard {
-//   const gameboard = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill(' '));
-//   gameboard[3][3] = 'o';
-//   gameboard[3][4] = 'x';
-//   gameboard[4][3] = 'x';
-//   gameboard[4][4] = 'o';
-//   return gameboard;
-// }
-
 export function initializeGameBoard(): Gameboard {
-  const gameboard = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill('x'));
+  const gameboard = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill(' '));
   gameboard[3][3] = 'o';
-  gameboard[3][4] = ' ';
-  gameboard[4][3] = 'o';
-  gameboard[4][4] = 'x';
+  gameboard[3][4] = 'x';
+  gameboard[4][3] = 'x';
+  gameboard[4][4] = 'o';
   return gameboard;
 }
+
+// export function initializeGameBoard(): Gameboard {
+//   const gameboard = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill('x'));
+//   gameboard[3][3] = 'o';
+//   gameboard[3][4] = ' ';
+//   gameboard[4][3] = 'o';
+//   gameboard[4][4] = 'x';
+//   return gameboard;
+// }
 
 export function cloneGameboard(gameboard: Gameboard): Gameboard {
   const gameboardClone = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill(' '));
@@ -184,4 +185,21 @@ export function getWinner(gameboard: Gameboard): string {
   if (score.x > score.o) return 'x';
   if (score.x < score.o) return 'o';
   return 'draw';
+}
+
+function convertGameboardToArray(gameboard: Gameboard): GameboardArray {
+  const gameboardArray: GameboardArray = [];
+  for (let i = 0; i < GAMEBOARD_SIZE; i++) {
+    for (let j = 0; j < GAMEBOARD_SIZE; j++) {
+      gameboardArray.push(gameboard[i][j]);
+    }
+  }
+  return gameboardArray;
+}
+
+function convertAImoveToMove(AImove: number): Move {
+  const row = Math.floor(AImove / GAMEBOARD_SIZE);
+  const column = AImove % GAMEBOARD_SIZE;
+  const move = { row, column };
+  return move;
 }

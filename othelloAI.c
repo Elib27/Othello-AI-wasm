@@ -1,5 +1,6 @@
-#include <stdio.h>
-#include <string.h>
+#include <emscripten.h>
+
+#define EXTERN
 
 #define GAMEBOARD_SIZE 8
 #define MAX_POSSIBLE_CASES_TO_CONVERT 48
@@ -68,7 +69,7 @@ int isCaseInGameboard(int row, int column)
 
 int getLegalMoves(char player, char gameboard[GAMEBOARD_SIZE][GAMEBOARD_SIZE], Move legalMoves[])
 {
-  int allPossibleMovesLength = 0;
+  int legalMovesCounter = 0;
   char adversary = player == 'x' ? 'o' : 'x';
   for (int row = 0; row < 8; row++)
   {
@@ -94,10 +95,10 @@ int getLegalMoves(char player, char gameboard[GAMEBOARD_SIZE][GAMEBOARD_SIZE], M
             if (isCaseInGameboard(newRow, newColumn) && gameboard[newRow][newColumn] == ' ')
             {
               Move possibleMove = { newRow, newColumn };
-              if (!isCaseInArray(&possibleMove, legalMoves, allPossibleMovesLength))
+              if (!isCaseInArray(&possibleMove, legalMoves, legalMovesCounter))
               {
-                legalMoves[allPossibleMovesLength] = possibleMove;
-                allPossibleMovesLength++;
+                legalMoves[legalMovesCounter] = possibleMove;
+                legalMovesCounter++;
               }
             }
           }
@@ -105,7 +106,7 @@ int getLegalMoves(char player, char gameboard[GAMEBOARD_SIZE][GAMEBOARD_SIZE], M
       }
     }
   }
-  return allPossibleMovesLength;
+  return legalMovesCounter;
 }
 
 int isMoveValid(int row, int column, char player, char gameboard[GAMEBOARD_SIZE][GAMEBOARD_SIZE])
@@ -271,8 +272,8 @@ int heuristic(char player, char gameboard[GAMEBOARD_SIZE][GAMEBOARD_SIZE], int o
 int getNegamaxDepth(int piecesOnBoard)
 {
   int depth = 8;
-  if (piecesOnBoard < 10) depth = 10;
-  else if (piecesOnBoard < 14) depth = 9;
+  if (piecesOnBoard < 10) depth = 9;
+  else if (piecesOnBoard < 14) depth = 8;
   else if (piecesOnBoard >= 64 - 12) depth = 12;
   return depth;
 }
@@ -332,24 +333,20 @@ int findBestMove(char player, char gameboard[GAMEBOARD_SIZE][GAMEBOARD_SIZE], Mo
   return bestScore;
 }
 
-void initializeGameBoard(char gameboard[GAMEBOARD_SIZE][GAMEBOARD_SIZE])
+void convertArrayToGameboard(char gameboardArray[GAMEBOARD_SIZE * GAMEBOARD_SIZE], char gameboard[GAMEBOARD_SIZE][GAMEBOARD_SIZE])
 {
-  for (int i = 0; i < 8; i++)
-    for (int j = 0; j < 8; j++)
-      gameboard[i][j] = ' ';
-
-  gameboard[3][3] = 'o';
-  gameboard[3][4] = 'x';
-  gameboard[4][3] = 'x';
-  gameboard[4][4] = 'o';
+  for (int i = 0; i < GAMEBOARD_SIZE; i++)
+    for (int j = 0; j < GAMEBOARD_SIZE; j++)
+      gameboard[i][j] = gameboardArray[i * GAMEBOARD_SIZE + j];
 }
 
-int main(void)
+EXTERN EMSCRIPTEN_KEEPALIVE
+int getAImove(char gameboardArray[GAMEBOARD_SIZE * GAMEBOARD_SIZE], char player)
 {
   char gameboard[GAMEBOARD_SIZE][GAMEBOARD_SIZE];
-  initializeGameBoard(gameboard);
+  convertArrayToGameboard(gameboardArray, gameboard);
   Move bestMove;
-  findBestMove('x', gameboard, &bestMove);
-  printf("Best move: %d %d\n", bestMove.row, bestMove.column);
-  return 0;
+  findBestMove(player, gameboard, &bestMove);
+  int bestMoveCase = bestMove.row * GAMEBOARD_SIZE + bestMove.column;
+  return bestMoveCase;
 }
