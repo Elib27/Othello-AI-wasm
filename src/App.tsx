@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js';
-import OthelloGame from './OthelloGame';
+import OthelloGame from './components/OthelloGame/OthelloGame';
 
 const App: Component = () => {
   return <OthelloGame />;

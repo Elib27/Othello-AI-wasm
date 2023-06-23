@@ -1,7 +1,7 @@
 import type { Component } from 'solid-js';
-import type { Gameboard } from './othello';
+import type { Gameboard } from '../../othello';
 import styles from './GameResult.module.css'
-import { getWinner, getScore } from './othello';
+import { getWinner, getScore } from '../../othello';
 
 type GameResultProps = {gameboard: Gameboard};
 

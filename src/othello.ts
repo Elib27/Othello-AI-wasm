@@ -14,6 +14,8 @@ type Score =  {
 
 const GAMEBOARD_SIZE = 8;
 
+export const AIplayer = 'o';
+
 export function initializeGameBoard(): Gameboard {
   const gameboard = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill(' '));
   gameboard[3][3] = 'o';
@@ -22,15 +24,6 @@ export function initializeGameBoard(): Gameboard {
   gameboard[4][4] = 'o';
   return gameboard;
 }
-
-// export function initializeGameBoard(): Gameboard {
-//   const gameboard = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill('x'));
-//   gameboard[3][3] = 'o';
-//   gameboard[3][4] = ' ';
-//   gameboard[4][3] = 'o';
-//   gameboard[4][4] = 'x';
-//   return gameboard;
-// }
 
 export function cloneGameboard(gameboard: Gameboard): Gameboard {
   const gameboardClone = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill(' '));
@@ -144,15 +137,6 @@ export function placeLegalMovesOnGameboard(gameboard: Gameboard, player: string)
   return gameboardWithLegalMoves;
 }
 
-function removeLegalMovesOnGameboard(gameboard: Gameboard): void {
-  for (let i = 0; i < GAMEBOARD_SIZE; i++) {
-    for (let j = 0; j < GAMEBOARD_SIZE; j++) {
-      if (gameboard[i][j] == '.')
-        gameboard[i][j] = ' ';
-    }
-  }
-}
-
 export function checkIfGameEnd(gameboard: Gameboard): boolean {
   const playerOLegalMoves = getLegalMoves('o', gameboard);
   const playerXLegalMoves = getLegalMoves('x', gameboard);
@@ -201,4 +185,10 @@ export function convertAImoveToMove(AImove: number): Move {
   const column = AImove % GAMEBOARD_SIZE;
   const move = { row, column };
   return move;
+}
+
+export function copyInt8Array(src: Int8Array, dest: Int8Array): void {
+  for (let i = 0; i < src.length; i++) {
+    dest[i] = src[i];
+  }
 }
