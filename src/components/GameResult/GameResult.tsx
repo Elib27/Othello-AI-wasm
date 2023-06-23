@@ -3,7 +3,11 @@ import type { Gameboard } from '../../othello';
 import styles from './GameResult.module.css'
 import { getWinner, getScore } from '../../othello';
 
-type GameResultProps = {gameboard: Gameboard};
+interface GameResultProps 
+{
+  gameboard: Gameboard;
+  reset: () => void;
+};
 
 const GameResult: Component<GameResultProps> = (props) => {
 
@@ -12,7 +16,8 @@ const GameResult: Component<GameResultProps> = (props) => {
 
   function winnerText(winner: string) {
     if (winner === 'draw') return 'Draw: no winner !';
-    return `The winner is ${winner.toUpperCase()} !`;
+    if (winner === 'x') return 'You won !';
+    return 'You lost !';
   }
 
   return (
@@ -24,6 +29,10 @@ const GameResult: Component<GameResultProps> = (props) => {
         <p>X : {score.x}</p>
         <p>O : {score.o}</p>
       </div>
+      <button
+        class={styles.resetButton}
+        onClick={props.reset}
+      >Reset</button>
     </div>
   )
 };

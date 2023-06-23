@@ -23,27 +23,48 @@ const OthelloGame: Component = () => {
   const [gameboard, setGameboard] = createSignal<Gameboard>(initializeGameBoard());
   const [player, setPlayer] = createSignal('x');
   const [isGameEnd, setIsGameEnd] = createSignal(false);
+  const [difficulty, setDifficulty] = createSignal(1);
 
   const updateGameEnd = () => setIsGameEnd(checkIfGameEnd(gameboard()));
 
-  let getAImoveWrapper: (gameboard: Gameboard, player: string) => Promise<Move>;
+  const difficultyText = () => {
+    switch (difficulty()) {
+      case 0: return 'Easy';
+      case 1: return 'Medium';
+      case 2: return 'Hard';
+      default: return 'Medium';
+    }
+  }
+
+  let getAImoveWrapper: (gameboard: Gameboard, player: string, difficulty: number) => Promise<Move>;
 
   onMount(() => {
     WebAssembly.instantiateStreaming(fetch('/othelloAI.wasm'), {}).then(obj => {
 
       const getAImove = obj.instance.exports.getAImove as CallableFunction;
 
-      getAImoveWrapper = async (gameboard: Gameboard, player: string) => {
+      getAImoveWrapper = async (gameboard: Gameboard, player: string, difficulty: number) => {
         const arrayGameboard = convertGameboardToArray(gameboard);
         const WASMmemory = obj.instance.exports.memory as WebAssembly.Memory;
         const arrayGameboardMemory = new Int8Array(WASMmemory.buffer);
         copyInt8Array(arrayGameboard, arrayGameboardMemory);
-        const result = getAImove(arrayGameboardMemory, player.charCodeAt(0));
+        const result = getAImove(arrayGameboardMemory, player.charCodeAt(0), difficulty);
         const move = convertAImoveToMove(result);
         return move;
       }
     });
   });
+
+  function reset() {
+    setGameboard(initializeGameBoard());
+    setPlayer('x');
+    setIsGameEnd(false);
+  }
+
+  function changeDifficulty() {
+    reset();
+    setDifficulty(d => (d + 1) % 3);
+  }
 
   function updateGameboardWithMove(move: Move, player: string) {
     const newGameboard = cloneGameboard(gameboard());
@@ -52,11 +73,16 @@ const OthelloGame: Component = () => {
   }
 
   async function playAIMove() {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const legalMoves = getLegalMoves(AIplayer, gameboard());
-    if (legalMoves.length === 0) return;
-    const move = await getAImoveWrapper(gameboard(), AIplayer)
+    setPlayer('o');
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const AIlegalMoves = getLegalMoves(player(), gameboard());
+    if (AIlegalMoves.length === 0) return;
+    const move = await getAImoveWrapper(gameboard(), player(), difficulty())
     updateGameboardWithMove(move, player());
+    setPlayer('x');
+    updateGameEnd();
+    const playerLegalMoves = getLegalMoves(player(), gameboard());
+    if (playerLegalMoves.length === 0) playAIMove();
   }
 
   async function setPlayerCase(move: Move) {
@@ -64,21 +90,30 @@ const OthelloGame: Component = () => {
     if (!isMoveValid(move, player(), gameboard())) return;
     updateGameboardWithMove(move, player());
     updateGameEnd();
-    setPlayer('o')
     await playAIMove();
-    setPlayer('x');
-    updateGameEnd();
   }
 
 
   return (
-    <Show when={!isGameEnd()} fallback={<GameResult gameboard={gameboard()}/>}>
-      <div class={styles.playerRound}>{player() === AIplayer ? "AI is playing..." : "It's your turn !"}</div>
-      <GameboardUI
-        gameboard={gameboard}
-        player={player}
-        setPlayerCase={setPlayerCase}
-      />
+    <Show when={!isGameEnd()} fallback={<GameResult gameboard={gameboard()} reset={reset}/>}>
+      <div class={styles.layout}>
+        <button
+          class={styles.resetButton}
+          onClick={reset}
+        >Reset</button>
+        <div>
+          <div class={styles.playerRound}>{player() === AIplayer ? "AI is playing..." : "It's your turn !"}</div>
+          <GameboardUI
+            gameboard={gameboard}
+            player={player}
+            setPlayerCase={setPlayerCase}
+          />
+        </div>
+        <button
+          class={styles.resetButton}
+          onClick={changeDifficulty}
+        >Difficulty: {difficultyText()}</button>
+      </div>
     </Show>
   );
 }
