@@ -33,20 +33,21 @@ const OthelloGame: Component = () => {
     }
   }
 
-  let getAImove: (gameboard: Gameboard, player: string, difficulty: number) => void;
+  let sendInfosToAI: (gameboard: Gameboard, player: string, difficulty: number) => void;
+  let cancelAIsearch: () => void;
 
-  function initialiseAIWorker() {
+  onMount(() => {
     const othelloAIworker = new Worker("/worker.js");
 
     othelloAIworker.onmessage = (event) => {
-      const move = event.data;
+      const { move } = event.data;
       playAImove(move);
     };
 
-    getAImove = (gameboard: Gameboard, player: string, difficulty: number) => othelloAIworker.postMessage({ gameboard, player, difficulty });
-  }
+    sendInfosToAI = (gameboard: Gameboard, player: string, difficulty: number) => othelloAIworker.postMessage({ gameboard, player, difficulty });
 
-  onMount(initialiseAIWorker);
+    cancelAIsearch = () => othelloAIworker.postMessage({ cancelSearch: true });
+  });
 
   function playAImove(move: Move) {
     updateGameboardWithMove(move, player());
@@ -56,16 +57,15 @@ const OthelloGame: Component = () => {
     if (playerLegalMoves.length === 0) requestAImove();
   }
 
-  function reset() {
-    // if (player() === AIplayer) terminateAIworker();
-    // initialiseAIWorker();
+  function resetGame() {
+    if (player() === AIplayer) cancelAIsearch();
     setGameboard(initializeGameBoard());
     setPlayer('x');
     setIsGameEnd(false);
   }
 
   function changeDifficulty() {
-    reset();
+    resetGame();
     setDifficulty(d => (d + 1) % 3);
   }
 
@@ -79,7 +79,7 @@ const OthelloGame: Component = () => {
     setPlayer('o');
     const AIlegalMoves = getLegalMoves(player(), gameboard());
     if (AIlegalMoves.length === 0) return;
-    getAImove(gameboard(), player(), difficulty());
+    sendInfosToAI(gameboard(), player(), difficulty());
   }
 
   async function setPlayerCase(move: Move) {
@@ -92,11 +92,11 @@ const OthelloGame: Component = () => {
 
 
   return (
-    <Show when={!isGameEnd()} fallback={<GameResult gameboard={gameboard()} reset={reset}/>}>
+    <Show when={!isGameEnd()} fallback={<GameResult gameboard={gameboard()} resetGame={resetGame}/>}>
       <div class={styles.layout}>
         <button
           class={styles.resetButton}
-          onClick={reset}
+          onClick={resetGame}
         >Reset</button>
         <div>
           <div class={styles.playerRound}>{player() === AIplayer ? "AI is playing..." : "It's your turn !"}</div>

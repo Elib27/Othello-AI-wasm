@@ -25,9 +25,22 @@ function convertGameboardToArray(gameboard) {
 
 WebAssembly.instantiateStreaming(fetch('/othelloAI.wasm'), {}).then(obj => {
 
-  const getAImove = obj.instance.exports.getAImove;
+  let AI_SEARCH_CANCELLED = 0;
 
-  const generateAImove = async (gameboard, player, difficulty) => {
+  const { getAImove, SET_STOP_AI_SEARCH } = obj.instance.exports;
+
+  function stopAISearch() {
+    AI_SEARCH_CANCELLED = 1;
+    SET_STOP_AI_SEARCH(1);
+  }
+
+  function activateAISearch() {
+    AI_SEARCH_CANCELLED = 0;
+    SET_STOP_AI_SEARCH(0);
+  }
+
+  async function generateAImove(gameboard, player, difficulty) {
+    activateAISearch();
     const arrayGameboard = convertGameboardToArray(gameboard);
     const WASMmemory = obj.instance.exports.memory;
     const arrayGameboardMemory = new Int8Array(WASMmemory.buffer);
@@ -38,8 +51,13 @@ WebAssembly.instantiateStreaming(fetch('/othelloAI.wasm'), {}).then(obj => {
   }
 
   self.onmessage = async (event) => {
-    const {gameboard, player, difficulty} = event.data;
-    const AImove = await generateAImove(event.data.gameboard, event.data.player, event.data.difficulty)
-    self.postMessage(AImove);
+    if (event.data?.cancelSearch) {
+      stopAISearch();
+      return;
+    }
+    const { gameboard, player, difficulty } = event.data;
+    const AImove = await generateAImove(gameboard, player, difficulty);
+    if (AI_SEARCH_CANCELLED) return;
+    self.postMessage({ move: AImove });
   };
 });

@@ -6,7 +6,7 @@ import { getWinner, getScore } from '../../othello';
 interface GameResultProps 
 {
   gameboard: Gameboard;
-  reset: () => void;
+  resetGame: () => void;
 };
 
 const GameResult: Component<GameResultProps> = (props) => {
@@ -31,7 +31,7 @@ const GameResult: Component<GameResultProps> = (props) => {
       </div>
       <button
         class={styles.resetButton}
-        onClick={props.reset}
+        onClick={props.resetGame}
       >Reset</button>
     </div>
   )
