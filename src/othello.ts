@@ -170,26 +170,3 @@ export function getWinner(gameboard: Gameboard): string {
   if (score.x < score.o) return 'o';
   return 'draw';
 }
-
-export function convertGameboardToArray(gameboard: Gameboard): Int8Array {
-  const gameboardArray = new Int8Array(GAMEBOARD_SIZE * GAMEBOARD_SIZE);
-  for (let i = 0; i < GAMEBOARD_SIZE; i++) {
-    for (let j = 0; j < GAMEBOARD_SIZE; j++) {
-      gameboardArray[i * GAMEBOARD_SIZE + j] = gameboard[i][j].charCodeAt(0);
-    }
-  }
-  return gameboardArray;
-}
-
-export function convertAImoveToMove(AImove: number): Move {
-  const row = Math.floor(AImove / GAMEBOARD_SIZE);
-  const column = AImove % GAMEBOARD_SIZE;
-  const move = { row, column };
-  return move;
-}
-
-export function copyInt8Array(src: Int8Array, dest: Int8Array): void {
-  for (let i = 0; i < src.length; i++) {
-    dest[i] = src[i];
-  }
-}

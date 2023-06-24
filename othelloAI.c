@@ -20,7 +20,8 @@ int isCaseInArray(Move *move, Move moves[], int movesSize)
   {
     int rowsAreEqual = (move->row == moves[i].row);
     int columnsAreEqual = (move->column == moves[i].column);
-    if (rowsAreEqual && columnsAreEqual) return 1;
+    if (rowsAreEqual && columnsAreEqual)
+      return 1;
   }
   return 0;
 }
@@ -30,7 +31,8 @@ int countPlayerPieces(char player, char gameboard[GAMEBOARD_SIZE][GAMEBOARD_SIZE
   int playerPiecesCount = 0;
   for (int i = 0; i < 8; i++)
     for (int j = 0; j < 8; j++)
-      if (gameboard[i][j] == player) playerPiecesCount++;
+      if (gameboard[i][j] == player)
+        playerPiecesCount++;
   return playerPiecesCount;
 }
 
@@ -39,7 +41,8 @@ int countPiecesOnBoard(char gameboard[GAMEBOARD_SIZE][GAMEBOARD_SIZE])
   int piecesOnBoard = 0;
   for (int i = 0; i < GAMEBOARD_SIZE; i++)
     for (int j = 0; j < GAMEBOARD_SIZE; j++)
-      if (gameboard[i][j] != ' ') piecesOnBoard++;
+      if (gameboard[i][j] != ' ')
+        piecesOnBoard++;
   return piecesOnBoard;
 }
 
@@ -71,11 +74,13 @@ int getLegalMoves(char player, char gameboard[GAMEBOARD_SIZE][GAMEBOARD_SIZE], M
         {
           for (int j = -1; j <= 1; j++)
           {
-            if ((i == 0) && (j == 0)) continue;
+            if ((i == 0) && (j == 0))
+              continue;
             int mult = 1;
             int newRow = row + i;
             int newColumn = column + j;
-            if (gameboard[newRow][newColumn] == ' ') continue;
+            if (gameboard[newRow][newColumn] == ' ')
+              continue;
             while (isCaseInGameboard(newRow, newColumn) && gameboard[newRow][newColumn] == adversary)
             {
               mult++;
@@ -104,7 +109,8 @@ int isMoveValid(int row, int column, char player, char gameboard[GAMEBOARD_SIZE]
   Move desiredMove = {row, column};
   Move legalMoves[60];
   int legalMovesCounter = getLegalMoves(player, gameboard, legalMoves);
-  if (isCaseInArray(&desiredMove, legalMoves, legalMovesCounter)) return 1;
+  if (isCaseInArray(&desiredMove, legalMoves, legalMovesCounter))
+    return 1;
   return 0;
 }
 
@@ -121,7 +127,8 @@ void convertAdversaryPieces(Move *move, char player, char gameboard[GAMEBOARD_SI
   {
     for (int j = -1; j <= 1; j++)
     {
-      if (i == 0 && j == 0) continue;
+      if (i == 0 && j == 0)
+        continue;
       int casesToConvertCount = 0;
       int mult = 1;
       int newRow = move->row + i;
@@ -217,13 +224,16 @@ int countSideStablePieces(char player, char gameboard[GAMEBOARD_SIZE][GAMEBOARD_
   int directions[8][2] = {{1, 0}, {0, 1}, {-1, 0}, {0, 1}, {-1, 0}, {0, -1}, {-1, 0}, {0, 1}};
   for (int k = 0; k < 4; k++)
   {
-    if (gameboard[corners[k][0]][corners[k][1]] != player) continue;
+    if (gameboard[corners[k][0]][corners[k][1]] != player)
+      continue;
     for (int i = 0; i < GAMEBOARD_SIZE; i++)
     {
       int row = corners[k][0] + i * directions[k][0];
       int column = corners[k][1] + i * directions[k][1];
-      if (!isCaseInGameboard(row, column)) break;
-      if (gameboard[row][column] != player) break;
+      if (!isCaseInGameboard(row, column))
+        break;
+      if (gameboard[row][column] != player)
+        break;
       stableSidePiecesCount++;
     }
   }
@@ -286,11 +296,13 @@ int negamax(int depth, char player, char originalPlayer, int maximizingPlayer, i
   {
     char gameboardClone[GAMEBOARD_SIZE][GAMEBOARD_SIZE];
     cloneGameboard(gameboard, gameboardClone);
-    if (playerCanPlay(legalMovesCounter)) playMove(&legalMoves[i], player, gameboardClone);
+    if (playerCanPlay(legalMovesCounter))
+      playMove(&legalMoves[i], player, gameboardClone);
     int eval = negamax(depth - 1, adversary, originalPlayer, -maximizingPlayer, -beta, -alpha, gameboardClone, originalPiecesOnBoard);
     heuristicValue = MAX(heuristicValue, -eval);
     alpha = MAX(alpha, heuristicValue);
-    if (alpha >= beta) break;
+    if (alpha >= beta)
+      break;
     i++;
   } while (i < legalMovesCounter);
   return heuristicValue;
