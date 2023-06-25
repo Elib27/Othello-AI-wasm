@@ -23,19 +23,23 @@ function convertGameboardToArray(gameboard) {
   return gameboardArray;
 }
 
-async function generateAImove(gameboard, player, difficulty, wasmExports) {
-  const arrayGameboard = convertGameboardToArray(gameboard);
-  const WASMmemory = wasmExports.memory;
-  const arrayGameboardMemory = new Int8Array(WASMmemory.buffer);
-  copyArray(arrayGameboard, arrayGameboardMemory);
-  const result = wasmExports.getAImove(arrayGameboardMemory, player.charCodeAt(0), difficulty);
-  const move = convertAImoveToMove(result);
-  return move;
-}
+WebAssembly.instantiateStreaming(fetch('/othelloAI.wasm'), {}).then(obj => {
 
-self.onmessage = async (event) => {
-  const { gameboard, player, difficulty } = event.data;
-  const wasmExports = JSON.parse(event.data.wasmExports);
-  const AImove = await generateAImove(gameboard, player, difficulty, wasmExports);
-  self.postMessage({ move: AImove });
-};
+  const getAImove = obj.instance.exports.getAImove;
+
+  const generateAImove = async (gameboard, player, difficulty) => {
+    const arrayGameboard = convertGameboardToArray(gameboard);
+    const WASMmemory = obj.instance.exports.memory;
+    const arrayGameboardMemory = new Int8Array(WASMmemory.buffer);
+    copyArray(arrayGameboard, arrayGameboardMemory);
+    const result = getAImove(arrayGameboardMemory, player.charCodeAt(0), difficulty);
+    const move = convertAImoveToMove(result);
+    return move;
+  }
+
+  self.onmessage = async (event) => {
+    const {gameboard, player, difficulty} = event.data;
+    const AImove = await generateAImove(event.data.gameboard, event.data.player, event.data.difficulty)
+    self.postMessage(AImove);
+  };
+});

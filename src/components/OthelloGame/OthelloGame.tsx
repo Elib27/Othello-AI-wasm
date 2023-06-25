@@ -33,27 +33,20 @@ const OthelloGame: Component = () => {
     }
   }
 
-  let sendInfosToAI: (gameboard: Gameboard, player: string, difficulty: number) => void;
+  let getAImove: (gameboard: Gameboard, player: string, difficulty: number) => void;
 
-  onMount(() => {
-    WebAssembly.instantiateStreaming(fetch('/othelloAI.wasm'), {}).then(obj => {
-      const wasmExports = obj.instance.exports;
-      console.log(JSON.parse(JSON.stringify(wasmExports)));
+  function initialiseAIWorker() {
+    const othelloAIworker = new Worker("/worker.js");
 
-      const othelloAIworker = new Worker("/worker.js");
+    othelloAIworker.onmessage = (event) => {
+      const move = event.data;
+      playAImove(move);
+    };
 
-      othelloAIworker.onmessage = (event) => {
-        const { move } = event.data;
-        playAImove(move);
-      };
-  
-      sendInfosToAI = (gameboard: Gameboard, player: string, difficulty: number) => {
-        othelloAIworker.postMessage({ gameboard, player, difficulty, wasmExports: JSON.stringify(wasmExports) });
-      }
-    });
-  });
-  
-  const cancelAIsearch = (worker: Worker) => worker.terminate();
+    getAImove = (gameboard: Gameboard, player: string, difficulty: number) => othelloAIworker.postMessage({ gameboard, player, difficulty });
+  }
+
+  onMount(initialiseAIWorker);
 
   function playAImove(move: Move) {
     updateGameboardWithMove(move, player());
@@ -63,15 +56,16 @@ const OthelloGame: Component = () => {
     if (playerLegalMoves.length === 0) requestAImove();
   }
 
-  function resetGame() {
-    // if (player() === AIplayer) cancelAIsearch(othelloAIworker);
+  function reset() {
+    // if (player() === AIplayer) terminateAIworker();
+    // initialiseAIWorker();
     setGameboard(initializeGameBoard());
     setPlayer('x');
     setIsGameEnd(false);
   }
 
   function changeDifficulty() {
-    resetGame();
+    reset();
     setDifficulty(d => (d + 1) % 3);
   }
 
@@ -85,7 +79,7 @@ const OthelloGame: Component = () => {
     setPlayer('o');
     const AIlegalMoves = getLegalMoves(player(), gameboard());
     if (AIlegalMoves.length === 0) return;
-    sendInfosToAI(gameboard(), player(), difficulty());
+    getAImove(gameboard(), player(), difficulty());
   }
 
   async function setPlayerCase(move: Move) {
@@ -98,11 +92,11 @@ const OthelloGame: Component = () => {
 
 
   return (
-    <Show when={!isGameEnd()} fallback={<GameResult gameboard={gameboard()} resetGame={resetGame}/>}>
+    <Show when={!isGameEnd()} fallback={<GameResult gameboard={gameboard()} reset={reset}/>}>
       <div class={styles.layout}>
         <button
           class={styles.resetButton}
-          onClick={resetGame}
+          onClick={reset}
         >Reset</button>
         <div>
           <div class={styles.playerRound}>{player() === AIplayer ? "AI is playing..." : "It's your turn !"}</div>
