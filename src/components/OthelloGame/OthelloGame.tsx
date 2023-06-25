@@ -97,6 +97,7 @@ const OthelloGame: Component = () => {
     if (player() === AIplayer) return;
     if (!isMoveValid(move, player(), gameboard())) return;
     updateGameboardWithMove(move, player());
+    setLastAIMove(null);
     updateGameEnd();
     requestAImove();
   }
