@@ -1,6 +1,3 @@
-/*** Othello game logic ***/
-"use strict";
-
 export type Gameboard = string[][];
 
 export type Move = {
