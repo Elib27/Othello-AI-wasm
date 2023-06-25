@@ -271,16 +271,9 @@ int getNegamaxDepth(int piecesOnBoard, int difficulty)
   return depth;
 }
 
-int STOP_AI_SEARCH = 0;
-
-EXTERN EMSCRIPTEN_KEEPALIVE void SET_STOP_AI_SEARCH(int value)
-{
-  STOP_AI_SEARCH = value;
-}
-
 int negamax(int depth, char player, char originalPlayer, int maximizingPlayer, int alpha, int beta, char gameboard[GAMEBOARD_SIZE][GAMEBOARD_SIZE], int originalPiecesOnBoard)
 {
-  if (depth == 0 || isGameEnd(gameboard) || STOP_AI_SEARCH)
+  if (depth == 0 || isGameEnd(gameboard))
   {
     return maximizingPlayer * heuristic(originalPlayer, gameboard, originalPiecesOnBoard);
   }

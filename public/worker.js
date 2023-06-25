@@ -23,41 +23,19 @@ function convertGameboardToArray(gameboard) {
   return gameboardArray;
 }
 
-WebAssembly.instantiateStreaming(fetch('/othelloAI.wasm'), {}).then(obj => {
+async function generateAImove(gameboard, player, difficulty, wasmExports) {
+  const arrayGameboard = convertGameboardToArray(gameboard);
+  const WASMmemory = wasmExports.memory;
+  const arrayGameboardMemory = new Int8Array(WASMmemory.buffer);
+  copyArray(arrayGameboard, arrayGameboardMemory);
+  const result = wasmExports.getAImove(arrayGameboardMemory, player.charCodeAt(0), difficulty);
+  const move = convertAImoveToMove(result);
+  return move;
+}
 
-  let AI_SEARCH_CANCELLED = 0;
-
-  const { getAImove, SET_STOP_AI_SEARCH } = obj.instance.exports;
-
-  function stopAISearch() {
-    AI_SEARCH_CANCELLED = 1;
-    SET_STOP_AI_SEARCH(1);
-  }
-
-  function activateAISearch() {
-    AI_SEARCH_CANCELLED = 0;
-    SET_STOP_AI_SEARCH(0);
-  }
-
-  async function generateAImove(gameboard, player, difficulty) {
-    activateAISearch();
-    const arrayGameboard = convertGameboardToArray(gameboard);
-    const WASMmemory = obj.instance.exports.memory;
-    const arrayGameboardMemory = new Int8Array(WASMmemory.buffer);
-    copyArray(arrayGameboard, arrayGameboardMemory);
-    const result = getAImove(arrayGameboardMemory, player.charCodeAt(0), difficulty);
-    const move = convertAImoveToMove(result);
-    return move;
-  }
-
-  self.onmessage = async (event) => {
-    if (event.data?.cancelSearch) {
-      stopAISearch();
-      return;
-    }
-    const { gameboard, player, difficulty } = event.data;
-    const AImove = await generateAImove(gameboard, player, difficulty);
-    if (AI_SEARCH_CANCELLED) return;
-    self.postMessage({ move: AImove });
-  };
-});
+self.onmessage = async (event) => {
+  const { gameboard, player, difficulty } = event.data;
+  const wasmExports = JSON.parse(event.data.wasmExports);
+  const AImove = await generateAImove(gameboard, player, difficulty, wasmExports);
+  self.postMessage({ move: AImove });
+};

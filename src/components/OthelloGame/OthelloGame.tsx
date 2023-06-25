@@ -34,20 +34,26 @@ const OthelloGame: Component = () => {
   }
 
   let sendInfosToAI: (gameboard: Gameboard, player: string, difficulty: number) => void;
-  let cancelAIsearch: () => void;
 
   onMount(() => {
-    const othelloAIworker = new Worker("/worker.js");
+    WebAssembly.instantiateStreaming(fetch('/othelloAI.wasm'), {}).then(obj => {
+      const wasmExports = obj.instance.exports;
+      console.log(JSON.parse(JSON.stringify(wasmExports)));
 
-    othelloAIworker.onmessage = (event) => {
-      const { move } = event.data;
-      playAImove(move);
-    };
+      const othelloAIworker = new Worker("/worker.js");
 
-    sendInfosToAI = (gameboard: Gameboard, player: string, difficulty: number) => othelloAIworker.postMessage({ gameboard, player, difficulty });
-
-    cancelAIsearch = () => othelloAIworker.postMessage({ cancelSearch: true });
+      othelloAIworker.onmessage = (event) => {
+        const { move } = event.data;
+        playAImove(move);
+      };
+  
+      sendInfosToAI = (gameboard: Gameboard, player: string, difficulty: number) => {
+        othelloAIworker.postMessage({ gameboard, player, difficulty, wasmExports: JSON.stringify(wasmExports) });
+      }
+    });
   });
+  
+  const cancelAIsearch = (worker: Worker) => worker.terminate();
 
   function playAImove(move: Move) {
     updateGameboardWithMove(move, player());
@@ -58,7 +64,7 @@ const OthelloGame: Component = () => {
   }
 
   function resetGame() {
-    if (player() === AIplayer) cancelAIsearch();
+    // if (player() === AIplayer) cancelAIsearch(othelloAIworker);
     setGameboard(initializeGameBoard());
     setPlayer('x');
     setIsGameEnd(false);
