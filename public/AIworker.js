@@ -38,8 +38,8 @@ WebAssembly.instantiateStreaming(fetch('/othelloAI.wasm'), {}).then(obj => {
   }
 
   self.onmessage = async (event) => {
-    const {gameboard, player, difficulty} = event.data;
-    const AImove = await generateAImove(event.data.gameboard, event.data.player, event.data.difficulty)
-    self.postMessage(AImove);
+    const { gameboard, player, difficulty } = event.data;
+    const AImove = await generateAImove(gameboard, player, difficulty)
+    self.postMessage({ move: AImove });
   };
 });

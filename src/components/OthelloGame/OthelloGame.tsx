@@ -21,6 +21,10 @@ const OthelloGame: Component = () => {
   const [player, setPlayer] = createSignal('x');
   const [isGameEnd, setIsGameEnd] = createSignal(false);
   const [difficulty, setDifficulty] = createSignal(1);
+  const [lastAIMove, setLastAIMove] = createSignal<Move | null>(null);
+
+  const MIN_TIME_AI_TURN_MS = 1000;
+  let startTimeAIturn = 0;
 
   const updateGameEnd = () => setIsGameEnd(checkIfGameEnd(gameboard()));
 
@@ -33,23 +37,29 @@ const OthelloGame: Component = () => {
     }
   }
 
-  let getAImove: (gameboard: Gameboard, player: string, difficulty: number) => void;
-
-  function initialiseAIWorker() {
-    const othelloAIworker = new Worker("/worker.js");
-
-    othelloAIworker.onmessage = (event) => {
-      const move = event.data;
-      playAImove(move);
-    };
-
-    getAImove = (gameboard: Gameboard, player: string, difficulty: number) => othelloAIworker.postMessage({ gameboard, player, difficulty });
+  function withDelay<T>(callback: () => T, delay: number) {
+    const funcTimeOut = setTimeout(callback, delay);
+    return funcTimeOut;
   }
 
-  onMount(initialiseAIWorker);
+  let getAImove: (gameboard: Gameboard, player: string, difficulty: number) => void;
+
+  let timeOutAImoveID: number | undefined;
+
+  onMount(() => {
+    const othelloAIworker = new Worker("/AIworker.js");
+    getAImove = (gameboard: Gameboard, player: string, difficulty: number) => othelloAIworker.postMessage({ gameboard, player, difficulty });
+    
+    othelloAIworker.onmessage = async (event) => {
+      const ellapsedTimeAIturn = Date.now() - startTimeAIturn;
+      const timeToWait = MIN_TIME_AI_TURN_MS - ellapsedTimeAIturn;
+      timeOutAImoveID = withDelay(() => playAImove(event.data.move), timeToWait);
+    };
+  });
 
   function playAImove(move: Move) {
     updateGameboardWithMove(move, player());
+    setLastAIMove(move);
     setPlayer('x');
     updateGameEnd();
     const playerLegalMoves = getLegalMoves(player(), gameboard());
@@ -57,10 +67,10 @@ const OthelloGame: Component = () => {
   }
 
   function reset() {
-    // if (player() === AIplayer) terminateAIworker();
-    // initialiseAIWorker();
+    if (player() === AIplayer) clearInterval(timeOutAImoveID);
     setGameboard(initializeGameBoard());
     setPlayer('x');
+    setLastAIMove(null);
     setIsGameEnd(false);
   }
 
@@ -75,19 +85,20 @@ const OthelloGame: Component = () => {
     setGameboard(newGameboard);
   }
 
-  async function requestAImove() {
-    setPlayer('o');
-    const AIlegalMoves = getLegalMoves(player(), gameboard());
+  function requestAImove() {
+    const AIlegalMoves = getLegalMoves(AIplayer, gameboard());
     if (AIlegalMoves.length === 0) return;
-    getAImove(gameboard(), player(), difficulty());
+    setPlayer('o');
+    startTimeAIturn = Date.now();
+    getAImove(gameboard(), AIplayer, difficulty());
   }
 
-  async function setPlayerCase(move: Move) {
+  function setPlayerCase(move: Move) {
     if (player() === AIplayer) return;
     if (!isMoveValid(move, player(), gameboard())) return;
     updateGameboardWithMove(move, player());
     updateGameEnd();
-    await requestAImove();
+    requestAImove();
   }
 
 
@@ -104,6 +115,7 @@ const OthelloGame: Component = () => {
             gameboard={gameboard}
             player={player}
             setPlayerCase={setPlayerCase}
+            lastAIMove={lastAIMove}
           />
         </div>
         <button

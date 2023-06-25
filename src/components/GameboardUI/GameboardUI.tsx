@@ -8,6 +8,7 @@ interface Props {
   gameboard: Accessor<Gameboard>;
   player: Accessor<string>;
   setPlayerCase: (move: Move) => void;
+  lastAIMove: Accessor<Move | null>;
 }
 
 const GameboardUI: Component<Props> = (props) => {
@@ -15,6 +16,10 @@ const GameboardUI: Component<Props> = (props) => {
   const gameboardWithPossibleMoves = () => placeLegalMovesOnGameboard(props.gameboard(), props.player());
 
   const gameboardToShow = () => props.player() === AIplayer ? props.gameboard() : gameboardWithPossibleMoves();
+
+  const showLastAIMove = (move: Move) => props.player() !== AIplayer
+                                        && props.lastAIMove()?.row === move.row
+                                        && props.lastAIMove()?.column === move.column;
 
   return (
     <table class={styles.gameboard}>
@@ -31,7 +36,8 @@ const GameboardUI: Component<Props> = (props) => {
                   [styles.piece]: true, 
                   [styles.black]: gameCase() === 'x',
                   [styles.white]: gameCase() === 'o',
-                  [styles.border]: gameCase() === '.'
+                  [styles.possibleMove]: gameCase() === '.',
+                  [styles.lastAIMove]: showLastAIMove({row: i, column: j})
                   }}
                 ></div>
               </Show>
