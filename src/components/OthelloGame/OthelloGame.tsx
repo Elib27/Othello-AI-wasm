@@ -4,6 +4,7 @@ import { createSignal, onMount, Show } from 'solid-js';
 import styles from './OthelloGame.module.css';
 import GameResult from '../GameResult/GameResult';
 import GameboardUI from '../GameboardUI/GameboardUI';
+import AIworker from '../../AIworker.js?worker'
 import {
   AIplayer,
   initializeGameBoard,
@@ -47,7 +48,7 @@ const OthelloGame: Component = () => {
   let timeOutAImoveID: number | undefined;
 
   onMount(() => {
-    const othelloAIworker = new Worker("/AIworker.js");
+    const othelloAIworker = new AIworker();
     getAImove = (gameboard: Gameboard, player: string, difficulty: number) => othelloAIworker.postMessage({ gameboard, player, difficulty });
     
     othelloAIworker.onmessage = async (event) => {
