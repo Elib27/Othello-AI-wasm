@@ -34,8 +34,8 @@ const GameboardUI: Component<Props> = (props) => {
               <Show when={ gameCase() !== ' ' }>
                 <div classList={{
                   [styles.piece]: true, 
-                  [styles.black]: gameCase() === 'x',
-                  [styles.white]: gameCase() === 'o',
+                  [styles.accent]: gameCase() === 'x',
+                  [styles.black]: gameCase() === 'o',
                   [styles.possibleMove]: gameCase() === '.',
                   [styles.lastAIMove]: showLastAIMove({row: i, column: j})
                   }}

@@ -105,27 +105,32 @@ const OthelloGame: Component = () => {
 
 
   return (
-    <Show when={!isGameEnd()} fallback={<GameResult gameboard={gameboard()} reset={reset}/>}>
-      <div class={styles.layout}>
+    <div class={styles.layout}>
+      <div class={styles.sideWrapper}>
         <button
-          class={styles.resetButton}
+          classList={{[styles.resetButton]: true, [styles.resetButtonAccent]: isGameEnd()}}
           onClick={reset}
         >Reset</button>
-        <div>
-          <div class={styles.playerRound}>{player() === AIplayer ? "AI is playing..." : "It's your turn !"}</div>
-          <GameboardUI
-            gameboard={gameboard}
-            player={player}
-            setPlayerCase={setPlayerCase}
-            lastAIMove={lastAIMove}
-          />
-        </div>
+      </div>
+      <div class={styles.centerWrapper}>
+        <Show when={isGameEnd()}>
+          <GameResult gameboard={gameboard()}/>
+        </Show>
+        <div class={styles.playerRound}>{player() === AIplayer ? "AI is playing..." : "It's your turn !"}</div>
+        <GameboardUI
+          gameboard={gameboard}
+          player={player}
+          setPlayerCase={setPlayerCase}
+          lastAIMove={lastAIMove}
+        />
+      </div>
+      <div class={styles.sideWrapper}>
         <button
           class={styles.resetButton}
           onClick={changeDifficulty}
         >Difficulty: {difficultyText()}</button>
       </div>
-    </Show>
+    </div>
   );
 }
 

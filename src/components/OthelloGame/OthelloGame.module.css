@@ -1,18 +1,31 @@
 .layout {
+  height: 100vh;
   display: flex;
   justify-content: space-evenly;
   align-items: center;
 }
 
+.centerWrapper {
+  position: relative;
+}
+
+.sideWrapper {
+  flex: 1 1 0px;
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
 .playerRound {
-  margin-top: 2em;
+  margin: 1rem 0 2rem 0;
+  font-size: 1.5em;
   text-align: center;
 }
 
 .resetButton {
-  background-color: #fff;
+  color: var(--white);
+  background-color: var(--black);
   font-size: 1.25em;
-  color: #000;
   padding: 0.5em 1em;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -21,4 +34,22 @@
 
 .resetButton:active {
   transform: scale(0.98);
+}
+
+.resetButtonAccent {
+  background-color: var(--accent);
+}
+
+@media screen and (max-width: 960px) {
+  .layout {
+    flex-direction: column;
+    justify-content: center;
+    gap: 2rem;
+  }
+  .centerWrapper {
+    order: -1;
+  }
+  .sideWrapper {
+    flex-grow: 0;
+  }
 }
