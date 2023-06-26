@@ -23,7 +23,7 @@ function convertGameboardToArray(gameboard) {
   return gameboardArray;
 }
 
-WebAssembly.instantiateStreaming(fetch('/othelloAI.wasm'), {}).then(obj => {
+WebAssembly.instantiateStreaming(fetch(new URL('./othelloAI.wasm', import.meta.url).href), {}).then(obj => {
 
   const getAImove = obj.instance.exports.getAImove;
 
