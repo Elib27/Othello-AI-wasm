@@ -12,7 +12,7 @@ type Score =  {
 
 const GAMEBOARD_SIZE = 8;
 
-export const AIplayer = 'o';
+export const AI_PLAYER = 'o';
 
 export function initializeGameBoard(): Gameboard {
   const gameboard = Array(GAMEBOARD_SIZE).fill(null).map(() => Array(GAMEBOARD_SIZE).fill(' '));
@@ -55,24 +55,23 @@ export function getLegalMoves(player: string, gameboard: Gameboard): Move[] {
   const adversary = getAdversary(player);
   for (let row = 0; row < GAMEBOARD_SIZE; row++) {
     for (let column = 0; column < GAMEBOARD_SIZE; column++) {
-      if (gameboard[row][column] === player) {
-        const vectors = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [-1, 1], [1, -1], [1, 0], [1, 1]];
-        for (let i = 0; i < vectors.length; i++) {
-          let mult = 1;
-          let newRow = row + vectors[i][0];
-          let newColumn = column + vectors[i][1];
-          if (!isCaseInGameboard(newRow, newColumn) || gameboard[newRow][newColumn] === ' ')
-            continue;
-          while (isCaseInGameboard(newRow, newColumn) && gameboard[newRow][newColumn] === adversary) {
-            mult++;
-            newRow = row + mult * vectors[i][0];
-            newColumn = column + mult * vectors[i][1];
-          }
-          if (isCaseInGameboard(newRow, newColumn) && gameboard[newRow][newColumn] === ' ') {
-            const legalMove = { row: newRow, column: newColumn };
-            if (!isCaseInArray(legalMove, legalMoves)) {
-              legalMoves.push(legalMove);
-            }
+      if (gameboard[row][column] !== player) continue;
+      const directions = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [-1, 1], [1, -1], [1, 0], [1, 1]];
+      for (let i = 0; i < directions.length; i++) {
+        let mult = 1;
+        let newRow = row + directions[i][0];
+        let newColumn = column + directions[i][1];
+        if (!isCaseInGameboard(newRow, newColumn) || gameboard[newRow][newColumn] === ' ')
+          continue;
+        while (isCaseInGameboard(newRow, newColumn) && gameboard[newRow][newColumn] === adversary) {
+          mult++;
+          newRow = row + mult * directions[i][0];
+          newColumn = column + mult * directions[i][1];
+        }
+        if (isCaseInGameboard(newRow, newColumn) && gameboard[newRow][newColumn] === ' ') {
+          const legalMove = { row: newRow, column: newColumn };
+          if (!isCaseInArray(legalMove, legalMoves)) {
+            legalMoves.push(legalMove);
           }
         }
       }
@@ -82,7 +81,7 @@ export function getLegalMoves(player: string, gameboard: Gameboard): Move[] {
 }
 
 function isLegalMove(move: Move, player: string, gameboard: Gameboard): boolean {
-  const legalMoves: Move[] = getLegalMoves(player, gameboard);
+  const legalMoves = getLegalMoves(player, gameboard);
   const isMoveLegal = isCaseInArray(move, legalMoves);
   return isMoveLegal;
 }
@@ -96,17 +95,17 @@ export function isMoveValid(move: Move, player: string, gameboard: Gameboard): b
 
 function convertAdversaryPieces(move: Move, player: string, gameboard: Gameboard): void {
   const adversary = getAdversary(player);
-  const vectors = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [-1, 1], [1, -1], [1, 0], [1, 1]];
-  for (let i = 0; i < vectors.length; i++) {
+  const directions = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [-1, 1], [1, -1], [1, 0], [1, 1]];
+  for (let i = 0; i < directions.length; i++) {
     const casesToConvert: Move[] = [];
     let mult = 1;
-    let newRow = move.row + vectors[i][0];
-    let newColumn = move.column + vectors[i][1];
+    let newRow = move.row + directions[i][0];
+    let newColumn = move.column + directions[i][1];
     while (isCaseInGameboard(newRow, newColumn) && gameboard[newRow][newColumn] === adversary) {
       casesToConvert.push({ row: newRow, column: newColumn });
       mult++;
-      newRow = move.row + mult * vectors[i][0];
-      newColumn = move.column + mult * vectors[i][1];
+      newRow = move.row + mult * directions[i][0];
+      newColumn = move.column + mult * directions[i][1];
     }
     if (!isCaseInGameboard(newRow, newColumn) || gameboard[newRow][newColumn] !== player) {
       continue;
@@ -136,11 +135,9 @@ export function placeLegalMovesOnGameboard(gameboard: Gameboard, player: string)
 }
 
 export function checkIfGameEnd(gameboard: Gameboard): boolean {
-  const playerOLegalMoves = getLegalMoves('o', gameboard);
   const playerXLegalMoves = getLegalMoves('x', gameboard);
-  const legalMovesCounterPlayerX = playerXLegalMoves.length;
-  const legalMovesCounterPlayerO = playerOLegalMoves.length;
-  const endGame = !legalMovesCounterPlayerX && !legalMovesCounterPlayerO;
+  const playerOLegalMoves = getLegalMoves('o', gameboard);
+  const endGame = !playerXLegalMoves.length && !playerOLegalMoves.length;
   return endGame;
 }
 
@@ -156,9 +153,9 @@ function countPlayerPieces(player: string, gameboard: Gameboard): number {
 }
 
 export function getScore(gameboard: Gameboard): Score {
-  const playerXPiecesCounter = countPlayerPieces('x', gameboard);
-  const playerOPiecesCounter = countPlayerPieces('o', gameboard);
-  return { x: playerXPiecesCounter, o: playerOPiecesCounter };
+  const PlayerScoreX = countPlayerPieces('x', gameboard);
+  const PlayerScoreO = countPlayerPieces('o', gameboard);
+  return { x: PlayerScoreX, o: PlayerScoreO };
 }
 
 export function getWinner(gameboard: Gameboard): string {

@@ -6,7 +6,7 @@ import GameResult from '../GameResult/GameResult';
 import GameboardUI from '../GameboardUI/GameboardUI';
 import AIworker from '../../AIworker.js?worker'
 import {
-  AIplayer,
+  AI_PLAYER,
   initializeGameBoard,
   cloneGameboard,
   isMoveValid,
@@ -18,14 +18,15 @@ import {
 
 const OthelloGame: Component = () => {
 
+  // Mettre dans un store
   const [gameboard, setGameboard] = createSignal<Gameboard>(initializeGameBoard());
   const [player, setPlayer] = createSignal('x');
   const [isGameEnd, setIsGameEnd] = createSignal(false);
   const [difficulty, setDifficulty] = createSignal(1);
   const [lastAIMove, setLastAIMove] = createSignal<Move | null>(null);
 
-  const MIN_TIME_AI_TURN_MS = 1000;
-  let startTimeAIturn = 0;
+  const MIN_AI_TURN_TIME = 1000;
+  let startAIturnTime = 0;
 
   const updateGameEnd = () => setIsGameEnd(checkIfGameEnd(gameboard()));
 
@@ -51,12 +52,18 @@ const OthelloGame: Component = () => {
     const othelloAIworker = new AIworker();
     getAImove = (gameboard: Gameboard, player: string, difficulty: number) => othelloAIworker.postMessage({ gameboard, player, difficulty });
     
-    othelloAIworker.onmessage = async (event) => {
-      const ellapsedTimeAIturn = Date.now() - startTimeAIturn;
-      const timeToWait = MIN_TIME_AI_TURN_MS - ellapsedTimeAIturn;
+    othelloAIworker.onmessage = (event) => {
+      const ellapsedAIturnTime = Date.now() - startAIturnTime;
+      const timeToWait = MIN_AI_TURN_TIME - ellapsedAIturnTime;
       timeOutAImoveID = withDelay(() => playAImove(event.data.move), timeToWait);
     };
   });
+
+  function updateGameboardWithMove(move: Move, player: string) {
+    const newGameboard = cloneGameboard(gameboard());
+    playMove(move, player, newGameboard);
+    setGameboard(newGameboard);
+  }
 
   function playAImove(move: Move) {
     updateGameboardWithMove(move, player());
@@ -68,7 +75,7 @@ const OthelloGame: Component = () => {
   }
 
   function reset() {
-    if (player() === AIplayer) clearInterval(timeOutAImoveID);
+    if (player() === AI_PLAYER) clearInterval(timeOutAImoveID);
     setGameboard(initializeGameBoard());
     setPlayer('x');
     setLastAIMove(null);
@@ -80,22 +87,16 @@ const OthelloGame: Component = () => {
     setDifficulty(d => (d + 1) % 3);
   }
 
-  function updateGameboardWithMove(move: Move, player: string) {
-    const newGameboard = cloneGameboard(gameboard());
-    playMove(move, player, newGameboard);
-    setGameboard(newGameboard);
-  }
-
   function requestAImove() {
-    const AIlegalMoves = getLegalMoves(AIplayer, gameboard());
+    const AIlegalMoves = getLegalMoves(AI_PLAYER, gameboard());
     if (AIlegalMoves.length === 0) return;
     setPlayer('o');
-    startTimeAIturn = Date.now();
-    getAImove(gameboard(), AIplayer, difficulty());
+    startAIturnTime = Date.now();
+    getAImove(gameboard(), AI_PLAYER, difficulty());
   }
 
   function setPlayerCase(move: Move) {
-    if (player() === AIplayer) return;
+    if (player() === AI_PLAYER) return;
     if (!isMoveValid(move, player(), gameboard())) return;
     updateGameboardWithMove(move, player());
     setLastAIMove(null);
@@ -116,7 +117,7 @@ const OthelloGame: Component = () => {
         <Show when={isGameEnd()}>
           <GameResult gameboard={gameboard()}/>
         </Show>
-        <div class={styles.playerRound}>{player() === AIplayer ? "AI is playing..." : "It's your turn !"}</div>
+        <div class={styles.playerRound}>{player() === AI_PLAYER ? "AI is playing..." : "It's your turn !"}</div>
         <GameboardUI
           gameboard={gameboard}
           player={player}

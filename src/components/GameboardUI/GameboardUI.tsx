@@ -2,7 +2,7 @@ import type { Component, Accessor } from "solid-js";
 import type { Gameboard, Move } from "../../othello";
 import { Show, Index } from "solid-js";
 import styles from "./GameboardUI.module.css";
-import { placeLegalMovesOnGameboard, AIplayer } from "../../othello";
+import { AI_PLAYER, placeLegalMovesOnGameboard } from "../../othello";
 
 interface Props {
   gameboard: Accessor<Gameboard>;
@@ -15,9 +15,9 @@ const GameboardUI: Component<Props> = (props) => {
 
   const gameboardWithPossibleMoves = () => placeLegalMovesOnGameboard(props.gameboard(), props.player());
 
-  const gameboardToShow = () => props.player() === AIplayer ? props.gameboard() : gameboardWithPossibleMoves();
+  const gameboardToShow = () => props.player() === AI_PLAYER ? props.gameboard() : gameboardWithPossibleMoves();
 
-  const showLastAIMove = (move: Move) => props.player() !== AIplayer
+  const showLastAIMove = (move: Move) => props.player() !== AI_PLAYER
                                         && props.lastAIMove()?.row === move.row
                                         && props.lastAIMove()?.column === move.column;
 
@@ -26,17 +26,17 @@ const GameboardUI: Component<Props> = (props) => {
     <tbody>
       <Index each={gameboardToShow()}>{(row, i) => 
         <tr class={styles.row}>
-          <Index each={row()}>{(gameCase, j) =>
+          <Index each={row()}>{(cell, j) =>
             <td
               class={styles.cell}
               onClick={() => props.setPlayerCase({row: i, column: j})}
             >
-              <Show when={ gameCase() !== ' ' }>
+              <Show when={ cell() !== ' ' }>
                 <div classList={{
                   [styles.piece]: true, 
-                  [styles.accent]: gameCase() === 'x',
-                  [styles.black]: gameCase() === 'o',
-                  [styles.possibleMove]: gameCase() === '.',
+                  [styles.accent]: cell() === 'x',
+                  [styles.black]: cell() === 'o',
+                  [styles.possibleMove]: cell() === '.',
                   [styles.lastAIMove]: showLastAIMove({row: i, column: j})
                   }}
                 ></div>
