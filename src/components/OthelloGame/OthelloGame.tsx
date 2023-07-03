@@ -18,7 +18,6 @@ import {
 
 const OthelloGame: Component = () => {
 
-  // Mettre dans un store
   const [gameboard, setGameboard] = createSignal<Gameboard>(initializeGameBoard());
   const [player, setPlayer] = createSignal('x');
   const [isGameEnd, setIsGameEnd] = createSignal(false);
