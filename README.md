@@ -1,19 +1,19 @@
-# Othello AI WASM & SolidJS
+# Othello AI WASM & Solid.js
 
-This project is an AI Othello game using TypeScript, solidJS and WASM (compiled from C).  
-**You can test it here: [othello-AI-WASM](https://elib27.github.io/Othello-AI-wasm/)**
+This project is an AI Othello game using TypeScript, solid.js and WebAssembly(WASM) (compiled from C).  
+**You can test it here: [othello AI](https://elib27.github.io/Othello-AI-wasm/)**
+
+![othello AI](othello_ai_wasm.png)
 
 ## The AI algorithm
-The AI is using the minimax (negamax) algorithm, which explores the possible branches of the future moves and determines the best move according to an heuristic function, alternating between maximisation when the AI plays and minimisation when the opponent plays.  
+The AI employs the minimax (negamax) algorithm, delving into potential future moves and determining the optimal choice through a heuristic function. This function alternates between maximizing the AI's advantage and minimizing the opponent's moves.
 
-The heuristic function is a weighted sum of the following parameters:
-- the **stability** (the number of discs that can't be reversed)
-- the **parity** (the difference between the number of discs of the AI and the opponent)
-- the **position** (the value of the position of the discs according to the board)
+The heuristic function encompasses the following parameters:
+
+- **Stability:** The count of discs that cannot be reversed.
+- **Parity:** The difference between the number of discs owned by the AI and the opponent.
+- **Position:** The value assigned to the position of the discs on the board.
 
 ## The project
 
-For the UI, I used [SolidJS](https://www.solidjs.com/), a reactive javascript framework.  
-The logic of the game is written in Typescript.  
-The AI algorithm is written in C and compiled to [WASM](https://webassembly.org/) for better performance.  
-The AI WASM is loaded, compiled and executed asynchronously in a Web Worker.  
+For the UI, I have utilized [Solid.js](https://www.solidjs.com/), a reactive JavaScript framework. The game logic is implemented in TypeScript. The AI algorithm is crafted in C and compiled to WASM for enhanced performance. The AI in [WASM](https://webassembly.org/) is loaded, compiled, and executed asynchronously within a Web Worker, ensuring a seamless gaming experience.
