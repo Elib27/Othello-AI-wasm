@@ -40,9 +40,11 @@ function isCaseInGameboard(row: number, column: number): boolean {
 }
 
 function isCaseInArray(move: Move, moves: Move[]): boolean {
-  for (let i = 0; i < moves.length; i++)
-    if (move.row === moves[i].row && move.column === moves[i].column)
+  for (let i = 0; i < moves.length; i++) {
+    if (move.row === moves[i].row && move.column === moves[i].column) {
       return true;
+    }
+  }
   return false;
 }
 
@@ -55,14 +57,17 @@ export function getLegalMoves(player: string, gameboard: Gameboard): Move[] {
   const adversary = getAdversary(player);
   for (let row = 0; row < GAMEBOARD_SIZE; row++) {
     for (let column = 0; column < GAMEBOARD_SIZE; column++) {
-      if (gameboard[row][column] !== player) continue;
+      if (gameboard[row][column] !== player) {
+        continue;
+      }
       const directions = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [-1, 1], [1, -1], [1, 0], [1, 1]];
       for (let i = 0; i < directions.length; i++) {
         let mult = 1;
         let newRow = row + directions[i][0];
         let newColumn = column + directions[i][1];
-        if (!isCaseInGameboard(newRow, newColumn) || gameboard[newRow][newColumn] === ' ')
+        if (!isCaseInGameboard(newRow, newColumn) || gameboard[newRow][newColumn] === ' ') {
           continue;
+        }
         while (isCaseInGameboard(newRow, newColumn) && gameboard[newRow][newColumn] === adversary) {
           mult++;
           newRow = row + mult * directions[i][0];
@@ -145,8 +150,9 @@ function countPlayerPieces(player: string, gameboard: Gameboard): number {
   let piecesCount = 0;
   for (let i = 0; i < GAMEBOARD_SIZE; i++) {
     for (let j = 0; j < GAMEBOARD_SIZE; j++) {
-      if (gameboard[i][j] == player)
+      if (gameboard[i][j] == player) {
         piecesCount++;
+      }
     }
   }
   return piecesCount;

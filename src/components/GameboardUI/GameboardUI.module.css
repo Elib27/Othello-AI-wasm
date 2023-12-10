@@ -22,6 +22,7 @@
   width: 85%;
   border-radius: 50%;
   margin: 0 auto;
+  transition: background-color 0.2s ease-out;
 }
 
 .black {
@@ -34,6 +35,7 @@
 
 .possibleMove {
   border: 1px solid rgba(0, 0, 0, 0.25);
+  cursor: pointer;
 }
 
 .lastAIMove {

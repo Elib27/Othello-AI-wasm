@@ -103,7 +103,6 @@ const OthelloGame: Component = () => {
     requestAImove();
   }
 
-
   return (
     <div class={styles.layout}>
       <div class={styles.sideWrapper}>
