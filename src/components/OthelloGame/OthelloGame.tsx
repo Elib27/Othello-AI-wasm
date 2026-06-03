@@ -23,6 +23,8 @@ const OthelloGame: Component = () => {
   const [isGameEnd, setIsGameEnd] = createSignal(false);
   const [difficulty, setDifficulty] = createSignal(1);
   const [lastAIMove, setLastAIMove] = createSignal<Move | null>(null);
+  const [flippedCells, setFlippedCells] = createSignal<Set<string>>(new Set());
+  const [placedCell, setPlacedCell] = createSignal<string | null>(null);
 
   const MIN_AI_TURN_TIME = 1000;
   let startAIturnTime = 0;
@@ -43,6 +45,25 @@ const OthelloGame: Component = () => {
     return funcTimeOut;
   }
 
+  function getFlippedCells(
+    oldBoard: Gameboard,
+    newBoard: Gameboard,
+    placedMove: Move,
+  ): Set<string> {
+    const flipped = new Set<string>();
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        if (i === placedMove.row && j === placedMove.column) continue;
+        const oldVal = oldBoard[i][j];
+        const newVal = newBoard[i][j];
+        if (oldVal !== ' ' && oldVal !== '.' && newVal !== oldVal) {
+          flipped.add(`${i},${j}`);
+        }
+      }
+    }
+    return flipped;
+  }
+
   let getAImove: (gameboard: Gameboard, player: string, difficulty: number) => void;
 
   let timeOutAImoveID: number | undefined;
@@ -50,7 +71,7 @@ const OthelloGame: Component = () => {
   onMount(() => {
     const othelloAIworker = new AIworker();
     getAImove = (gameboard: Gameboard, player: string, difficulty: number) => othelloAIworker.postMessage({ gameboard, player, difficulty });
-    
+
     othelloAIworker.onmessage = (event) => {
       const ellapsedAIturnTime = Date.now() - startAIturnTime;
       const timeToWait = MIN_AI_TURN_TIME - ellapsedAIturnTime;
@@ -59,9 +80,18 @@ const OthelloGame: Component = () => {
   });
 
   function updateGameboardWithMove(move: Move, player: string) {
-    const newGameboard = cloneGameboard(gameboard());
+    setFlippedCells(new Set<string>());
+    setPlacedCell(`${move.row},${move.column}`);
+    const oldBoard = gameboard();
+    const newGameboard = cloneGameboard(oldBoard);
     playMove(move, player, newGameboard);
+    const flipped = getFlippedCells(oldBoard, newGameboard, move);
+    setFlippedCells(flipped);
     setGameboard(newGameboard);
+    if (flipped.size > 0) {
+      setTimeout(() => setFlippedCells(new Set<string>()), 350);
+    }
+    setTimeout(() => setPlacedCell(null), 200);
   }
 
   function playAImove(move: Move) {
@@ -79,6 +109,8 @@ const OthelloGame: Component = () => {
     setPlayer('x');
     setLastAIMove(null);
     setIsGameEnd(false);
+    setFlippedCells(new Set<string>());
+    setPlacedCell(null);
   }
 
   function changeDifficulty() {
@@ -105,29 +137,47 @@ const OthelloGame: Component = () => {
 
   return (
     <div class={styles.layout}>
-      <div class={styles.sideWrapper}>
-        <button
-          classList={{[styles.resetButton]: true, [styles.resetButtonAccent]: isGameEnd()}}
-          onClick={reset}
-        >Reset</button>
+      <div
+        classList={{
+          [styles.playerRound]: true,
+          [styles.aiThinking]: player() === AI_PLAYER,
+        }}
+      >
+        <span
+          classList={{
+            [styles.statusDot]: true,
+            [styles.statusDotPlayer]: player() !== AI_PLAYER,
+            [styles.statusDotAI]: player() === AI_PLAYER,
+          }}
+        ></span>
+        {player() === AI_PLAYER ? "AI is thinking..." : "Your turn"}
       </div>
       <div class={styles.centerWrapper}>
         <Show when={isGameEnd()}>
-          <GameResult gameboard={gameboard()}/>
+          <GameResult gameboard={gameboard()} onReset={reset} />
         </Show>
-        <div class={styles.playerRound}>{player() === AI_PLAYER ? "AI is playing..." : "It's your turn !"}</div>
         <GameboardUI
           gameboard={gameboard}
           player={player}
           setPlayerCase={setPlayerCase}
           lastAIMove={lastAIMove}
+          flippedCells={flippedCells}
+          placedCell={placedCell}
         />
       </div>
-      <div class={styles.sideWrapper}>
+      <div class={styles.controlRow}>
         <button
-          class={styles.resetButton}
-          onClick={changeDifficulty}
-        >Difficulty: {difficultyText()}</button>
+          classList={{
+            [styles.resetButton]: true,
+            [styles.resetButtonAccent]: isGameEnd(),
+          }}
+          onClick={reset}
+        >
+          Reset
+        </button>
+        <button class={styles.resetButton} onClick={changeDifficulty}>
+          Difficulty: <span class={styles.difficultyValue}>{difficultyText()}</span>
+        </button>
       </div>
     </div>
   );

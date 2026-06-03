@@ -3,9 +3,10 @@ import type { Gameboard } from '../../othello';
 import styles from './GameResult.module.css'
 import { getWinner, getScore } from '../../othello';
 
-interface GameResultProps 
+interface GameResultProps
 {
   gameboard: Gameboard;
+  onReset: () => void;
 };
 
 const GameResult: Component<GameResultProps> = (props) => {
@@ -34,6 +35,9 @@ const GameResult: Component<GameResultProps> = (props) => {
           {score.o}
         </div>
       </div>
+      <button class={styles.playAgainButton} onClick={props.onReset}>
+        Play Again
+      </button>
     </div>
   )
 };
